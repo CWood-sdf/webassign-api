@@ -34,7 +34,7 @@ async function runWebassignSite() {
 
     await page.type("#okta-signin-username", process.env.WEBASSIGN_PASSWORD);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    await page.screenshot({ path: "example3.png" });
+    // await page.screenshot({ path: "example3.png" });
     await Promise.all([
         // page.waitForNavigation(),
         page.click("#okta-signin-submit"),
@@ -50,7 +50,7 @@ async function runWebassignSite() {
     await page.waitForNavigation();
 
     // console.error("Page loaded");
-    await page.screenshot({ path: "yeet.png" });
+    // await page.screenshot({ path: "yeet.png" });
 
     // Wait for the page to load
     // await page2.waitForSelector("#page-h1");
@@ -59,10 +59,10 @@ async function runWebassignSite() {
     await page.waitForSelector("section.add-courses");
     // console.error("div.quick-links loaded");
     console.error("Page loaded");
-    await page.screenshot({ path: "asdfads.png" });
+    // await page.screenshot({ path: "asdfads.png" });
 
     await page.waitForSelector("#name-0");
-    await page.screenshot({ path: "asdfads2.png" });
+    // await page.screenshot({ path: "asdfads2.png" });
 
     var ret = [];
 
@@ -71,7 +71,7 @@ async function runWebassignSite() {
         await newPage.goto(
             "https://cengage.com/dashboard/#/my-dashboard/authenticated",
         );
-        await newPage.screenshot({ path: `course${course}_0.png` });
+        // await newPage.screenshot({ path: `course${course}_0.png` });
         await newPage.waitForSelector("#name-0");
         // console.error(`Navigating to course ${course}`);
         await newPage.waitForSelector(`#tile${course} a`);

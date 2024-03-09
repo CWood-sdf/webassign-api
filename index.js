@@ -1,12 +1,13 @@
 const puppeteer = require("puppeteer");
 const dotenv = require("dotenv");
 
+dotenv.config();
 const courses = [2, 3];
 
 console.error("Starting");
 
 async function runWebassignSite() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ headless: false });
 
     const page = await browser.newPage();
     console.error("Page created");
@@ -15,13 +16,58 @@ async function runWebassignSite() {
     await page.goto("https://www.webassign.net/wa-auth/login");
     console.error("Page loaded");
 
-    await page.waitForNavigation();
+    await page.waitForSelector("#idp-discovery-username");
     console.error("Page loaded");
 
     // Fill in the #idp-discovery-username input with the email then click the #idp-discovery-submit button
-    dotenv.config();
+    //
+    // await page.type("#idp-discovery-username", process.env.WEBASSIGN_EMAIL);
+    // await page.$eval(
+    //     "#idp-discovery-username",
+    //     (el, value) => (el.value = value),
+    //     process.env.WEBASSIGN_EMAIL,
+    // );
+    //
+    console.email = process.env.WEBASSIGN_EMAIL;
+    await page.click("#idp-discovery-username");
+    const el = await page.$("#idp-discovery-username");
+    // el.setAttribute("value", process.env.WEBASSIGN_EMAIL);
+    // console.log("Found email input");
+    const evalFn = (function (email) {
+        console.error(email);
+        return (
+            "document.getElementById('idp-discovery-username').setAttribute('value', '" +
+            email +
+            "');"
+        );
+    })(process.env.WEBASSIGN_EMAIL);
 
-    await page.type("#idp-discovery-username", process.env.WEBASSIGN_EMAIL);
+    await page.evaluate(evalFn, el);
+    await page.type("#idp-discovery-username", " ");
+
+    // wait 1 second
+    // console.error("Filled in email");
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    // console.error("Waited");
+
+    await page.click("#idp-discovery-submit");
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    // await page.click("#idp-discovery-submit");
+
+    // await page.type("#idp-discovery-username", process.env.WEBASSIGN_EMAIL);
+    // console.error("Filled in email");
+    // await page.waitForSelector("#onetrust-accept-btn-handler");
+    // console.error("Found accept button");
+    // await page.click("#onetrust-accept-btn-handler");
+    // console.error("Clicked accept button");
+    // const email = process.env.WEBASSIGN_EMAIL;
+    // await page.evaluate(
+    //     (function (email) {
+    //         return function () {
+    //             document.querySelector("#idp-discovery-username").value = email;
+    //         };
+    //     })(email),
+    // );
     console.error("Filled in email");
 
     await page.click("#idp-discovery-submit");

@@ -3,22 +3,22 @@ const path = require("path");
 const process = require("process");
 const { authenticate } = require("@google-cloud/local-auth");
 const { google } = require("googleapis");
-const { exec } = require("child_process");
+// const { exec } = require("child_process");
 
 var assignments = [];
 
-async function runWebassignSite() {
-    var promise = new Promise((resolve, reject) => {
-        exec("node index.js", (err, stdout, stderr) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            assignments = JSON.parse(stdout);
+async function getStdinData() {
+    return new Promise((resolve, reject) => {
+        let data = "";
+        process.stdin.on("data", (chunk) => {
+            data += chunk;
+        });
+        process.stdin.on("end", () => {
+            console.error(data);
+            assignments = JSON.parse(data);
             resolve();
         });
     });
-    await promise;
 }
 
 // If modifying these scopes, delete token.json.
@@ -97,13 +97,13 @@ async function listEvents(auth) {
     });
     const events = res.data.items;
     if (!events || events.length === 0) {
-        console.log("No upcoming events found.");
+        console.error("No upcoming events found.");
         return;
     }
-    console.log("Upcoming 10 events:");
+    console.error("Upcoming 10 events:");
     events.map((event, _) => {
         const start = event.start.dateTime || event.start.date;
-        console.log(`${start} - ${event.summary}`);
+        console.error(`${start} - ${event.summary}`);
     });
 }
 
@@ -142,7 +142,7 @@ async function addEvent(auth) {
             // },
         };
         const prom = new Promise((resolve, reject) => {
-            // console.log(event);
+            // console.error(event);
             calendar.events.insert(
                 {
                     api_key: process.env.GOOGLE_API_KEY,
@@ -151,44 +151,18 @@ async function addEvent(auth) {
                     resource: event,
                 },
                 function (err, event) {
-                    // if (err) {
-                    //     console.log(
-                    //         "There was an error contacting the Calendar service: " +
-                    //             err.response.data.error.message,
-                    //     );
-                    //     // reject(err);
-                    //     // return;
-                    // }
-                    console.log("Event created: ", event.data.summary);
+                    console.error("Event created: ", event.data.summary);
                     resolve();
                 },
             );
         });
         await prom;
     }
-    // });
-    // const res = calendar.events.insert(
-    //     {
-    //         calendarId: "primary",
-    //         resource: event,
-    //     },
-    //     function (err, event) {
-    //         if (err) {
-    //             console.log(
-    //                 "There was an error contacting the Calendar service: " +
-    //                     err,
-    //             );
-    //             return;
-    //         }
-    //         console.log("Event created: %s", event.htmlLink);
-    //     },
-    // );
-    // await prom;
     return auth;
 }
 
-runWebassignSite()
+getStdinData()
     .then(authorize)
     .then(addEvent)
-    .then(listEvents)
+    // .then(listEvents)
     .catch(console.error);

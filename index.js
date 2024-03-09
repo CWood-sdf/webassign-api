@@ -2,12 +2,12 @@ const puppeteer = require("puppeteer");
 const dotenv = require("dotenv");
 
 dotenv.config();
-const courses = [2, 3];
+const courses = require("./courses.js");
 
 console.error("Starting");
 
 async function runWebassignSite() {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
 
     const page = await browser.newPage();
     console.error("Page created");
@@ -20,14 +20,6 @@ async function runWebassignSite() {
     console.error("Page loaded");
 
     // Fill in the #idp-discovery-username input with the email then click the #idp-discovery-submit button
-    //
-    // await page.type("#idp-discovery-username", process.env.WEBASSIGN_EMAIL);
-    // await page.$eval(
-    //     "#idp-discovery-username",
-    //     (el, value) => (el.value = value),
-    //     process.env.WEBASSIGN_EMAIL,
-    // );
-    //
     console.email = process.env.WEBASSIGN_EMAIL;
     await page.click("#idp-discovery-username");
     const el = await page.$("#idp-discovery-username");
@@ -51,23 +43,6 @@ async function runWebassignSite() {
     // console.error("Waited");
 
     await page.click("#idp-discovery-submit");
-    // await new Promise((resolve) => setTimeout(resolve, 1000));
-    // await page.click("#idp-discovery-submit");
-
-    // await page.type("#idp-discovery-username", process.env.WEBASSIGN_EMAIL);
-    // console.error("Filled in email");
-    // await page.waitForSelector("#onetrust-accept-btn-handler");
-    // console.error("Found accept button");
-    // await page.click("#onetrust-accept-btn-handler");
-    // console.error("Clicked accept button");
-    // const email = process.env.WEBASSIGN_EMAIL;
-    // await page.evaluate(
-    //     (function (email) {
-    //         return function () {
-    //             document.querySelector("#idp-discovery-username").value = email;
-    //         };
-    //     })(email),
-    // );
     console.error("Filled in email");
 
     await page.click("#idp-discovery-submit");
@@ -78,13 +53,23 @@ async function runWebassignSite() {
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    await page.type("#okta-signin-username", process.env.WEBASSIGN_PASSWORD);
+    const pwEl = await page.$("#okta-signin-password");
+
+    const slicedPw = process.env.WEBASSIGN_PASSWORD.slice(1);
+    const lastChar = process.env.WEBASSIGN_PASSWORD.at(0);
+    const evalFn2 = (function (pw) {
+        return (
+            "document.getElementById('okta-signin-password').setAttribute('value', '" +
+            pw +
+            "');"
+        );
+    })(slicedPw);
+
+    await page.evaluate(evalFn2, pwEl);
+
+    await page.type("#okta-signin-password", lastChar);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    // await page.screenshot({ path: "example3.png" });
-    await Promise.all([
-        // page.waitForNavigation(),
-        page.click("#okta-signin-submit"),
-    ]);
+    await Promise.all([page.click("#okta-signin-submit")]);
     console.error("Filled in password");
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -141,12 +126,6 @@ async function runWebassignSite() {
                 return assignment.innerText.split("\n");
             });
         });
-        // console.log(
-        //     arr.map((v) => ({
-        //         name: v[0],
-        //         due: Date.parse(v[1]) / 1000,
-        //     })),
-        // );
         arr.forEach((v) => {
             ret.push({
                 name: v[0],
@@ -154,28 +133,9 @@ async function runWebassignSite() {
                 course: courseName,
             });
         });
-        // console.log(arr);
-        // console.log(`Found course ${course} assignments`);
-
-        // await Promise.all([page.waitForNavigation(), page.click("#homeLink")]);
-        // console.log(`Navigated to home from course ${course}`);
-        // await page.waitForSelector("#name-0");
-        // console.log(`Found home from course ${course}`);
-        // await page.screenshot({ path: `course${course}2.png` });
-        // console.log(`Took screenshot of home from course ${course}`);
     }
-    //
-    // // List the number of elements in the .title-list ul
-    //
-    // const titles = await page.evaluate(() => {
-    //     const titleList = document.querySelectorAll("b.ng-binding");
-    //     return Array.from(titleList).map((title) => title.innerText);
-    // });
-    // console.log(titles);
-    //
-    // console.log("###");
     console.log(JSON.stringify(ret));
-    console.error(JSON.stringify(ret));
+    // console.error(JSON.stringify(ret));
     let pages = await browser.pages();
     await Promise.all(pages.map((page) => page.close()));
 

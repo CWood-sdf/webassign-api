@@ -7,7 +7,7 @@ const courses = require("./courses.js");
 console.error("Starting");
 
 async function runWebassignSite() {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
 
     const page = await browser.newPage();
     console.error("Page created");

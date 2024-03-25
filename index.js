@@ -7,7 +7,7 @@ const courses = require("./courses.js");
 console.error("Starting");
 
 async function runWebassignSite() {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
 
     const page = await browser.newPage();
     console.error("Page created");
@@ -87,34 +87,51 @@ async function runWebassignSite() {
     // await page2.waitForSelector("#page-h1");
     // await page2.reload();
     console.error("page-h1 loaded");
-    await page.waitForSelector("section.add-courses");
+    await page.waitForSelector(".css-1rpqxn4");
     // console.error("div.quick-links loaded");
     console.error("Page loaded");
     // await page.screenshot({ path: "asdfads.png" });
 
-    await page.waitForSelector("#name-0");
+    // await page.waitForSelector("#name-0");
     // await page.screenshot({ path: "asdfads2.png" });
 
     var ret = [];
 
-    for (const course of courses) {
-        const newPage = await browser.newPage();
-        await newPage.goto(
-            "https://cengage.com/dashboard/#/my-dashboard/authenticated",
-        );
-        // await newPage.screenshot({ path: `course${course}_0.png` });
-        await newPage.waitForSelector("#name-0");
-        // console.error(`Navigating to course ${course}`);
-        await newPage.waitForSelector(`#tile${course} a`);
-        console.error(`Found course ${course}`);
-        const courseNameTile = await newPage.$(`#name-${course} .ng-binding`);
+    const courseTiles = await page.$$(
+        `a.css-dwce1g-LinkStyledAsButton-BaseStyledButton`,
+    );
+    var usedCourses = [];
+
+    for (const course of courseTiles) {
+        var courseNameTile = await course.getProperty("parentNode");
+        courseNameTile = await courseNameTile.getProperty("parentNode");
+        courseNameTile = await courseNameTile.getProperty("firstChild");
+        courseNameTile = await courseNameTile.getProperty("lastChild");
+        courseNameTile = await courseNameTile.getProperty("firstChild");
+        // courseNameTile = await courseNameTile[0];
+
+        // console.error(courseNameTile);
         const courseName = await courseNameTile.evaluate((el) => el.innerText);
+        if (usedCourses.includes(courseName)) {
+            continue;
+        }
+        usedCourses.push(courseName);
+        const newPage = await browser.newPage();
+        await newPage.goto(await course.evaluate((el) => el.href));
+        // await newPage.screenshot({ path: `course${course}_0.png` });
+        // await newPage.waitForSelector("section.css-1rpqxn4");
+        // // console.error(`Navigating to course ${course}`);
+        // await newPage.waitForSelector(
+        //     `a.css-dwce1g-LinkStyledAsButton-BaseStyledButton e1v66uiy1`,
+        // );
+        // await newPage.waitForSelector(`#tile${course} a`);
+        // console.error(`Found course ${course}`);
         console.error(courseName);
-        await Promise.all([
-            newPage.waitForNavigation(),
-            newPage.click(`#tile${course} a`),
-        ]);
-        console.error(`Navigated to course ${course}`);
+        // await Promise.all([
+        //     newPage.waitForNavigation(),
+        //     newPage.click(`#tile${course} a`),
+        // ]);
+        console.error(`Navigated to course ${course.href}`);
 
         await newPage.waitForSelector("#js-student-myAssignmentsWrapper");
 
